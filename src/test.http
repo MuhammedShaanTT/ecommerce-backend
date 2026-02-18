@@ -1,0 +1,11 @@
+POST http://localhost:8080/api/products
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzZWxsZXJAZ21haWwuY29tIiwiaWF0IjoxNzcxNDUyMjIwLCJleHAiOjE3NzE1Mzg2MjB9.bclG13pkprErJwFFOonWra8X6RH3VrSltxt5B5pfjjE
+Content-Type: application/json
+
+{
+  "name": "iPhone 15",
+  "description": "128GB Black",
+  "price": 79999,
+  "stock": 10,
+  "categoryId": 1
+}
