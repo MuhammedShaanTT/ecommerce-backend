@@ -8,8 +8,23 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+          MYSQL_USER: ecommerce
+          MYSQL_PASSWORD: ecommerce
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - name: Checkout Code
@@ -21,6 +36,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: maven
+
+      - name: Wait for MySQL
+        run: |
+          until mysqladmin ping -h "127.0.0.1" -u root -proot --silent; do
+            echo "Waiting for MySQL to be ready..."
+            sleep 2
+          done
+          echo "MySQL is ready!"
 
       - name: Build with Maven
         run: mvn -B clean install
