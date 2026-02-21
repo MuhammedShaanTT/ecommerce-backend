@@ -1,115 +1,128 @@
-# 🛒 Spring Boot E-Commerce Backend (JWT + Role Based Auth)
+# 🛍️ ShopVerse — E-Commerce Platform
 
-A production-style REST API for an e-commerce platform built using **Spring Boot 3**, **Spring Security**, **JWT Authentication**, and **MySQL**.
+A full-stack e-commerce platform built with **Spring Boot** (backend) and **React + Vite** (frontend).
 
-This project demonstrates how modern backend systems handle authentication, authorization and protected APIs.
-
----
-
-## 🚀 Features
-
-* User Registration & Login
-* JWT Authentication
-* Role Based Authorization (CUSTOMER / SELLER / ADMIN)
-* Secure APIs using Spring Security Filter Chain
-* Product Creation (Protected Route)
-* MySQL Database Integration
-* Password Encryption using BCrypt
-* Stateless Authentication (No Sessions)
-
----
-
-## 🧱 Tech Stack
-
-* Java 17
-* Spring Boot 3
-* Spring Security
-* JWT (io.jsonwebtoken)
-* Spring Data JPA (Hibernate)
-* MySQL
-* Lombok
-* Maven
-
----
-
-## 🔐 Authentication Flow
-
-1. User registers
-2. User logs in
-3. Server generates JWT token
-4. Client sends token in header
+## 🏗️ Architecture
 
 ```
-Authorization: Bearer <token>
+┌─────────────────┐     ┌──────────────────┐     ┌─────────┐
+│  React Frontend │────▶│  Spring Boot API  │────▶│  MySQL  │
+│  (Port 5173)    │     │  (Port 4000)      │     │         │
+└─────────────────┘     └──────────────────┘     └─────────┘
+                              │
+                   ┌──────────┴──────────┐
+                   │   JWT Auth + RBAC   │
+                   │  BUYER│SELLER│ADMIN  │
+                   └─────────────────────┘
 ```
 
-5. Protected APIs become accessible
+## ⚡ Tech Stack
 
----
+| Layer | Technology |
+|-------|-----------|
+| Backend | Spring Boot 3, Spring Security, JPA/Hibernate |
+| Frontend | React 18, Vite, React Router, Axios |
+| Database | MySQL 8 |
+| Auth | JWT (JSON Web Tokens) |
+| Docs | Swagger / OpenAPI |
+| DevOps | Docker, GitHub Actions, Prometheus, Grafana |
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Java 17+
+- Node.js 18+
+- MySQL 8+
+- Maven
+
+### Backend
+```bash
+cd ecommerce
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+### Frontend
+```bash
+cd ecommerce-frontend
+npm install
+npm run dev
+```
+
+### Docker (Full Stack)
+```bash
+docker-compose up -d
+```
 
 ## 📡 API Endpoints
 
 ### Auth
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/api/auth/register` | Public |
+| POST | `/api/auth/login` | Public |
+| GET | `/api/auth/me` | Authenticated |
+| PUT | `/api/auth/profile` | Authenticated |
 
-POST `/api/auth/register`
-POST `/api/auth/login`
+### Products
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/products` | Public |
+| GET | `/api/products/{id}` | Public |
+| GET | `/api/products/search?query=` | Public |
+| GET | `/api/products/category/{id}` | Public |
+| POST | `/api/products` | SELLER |
+| PUT | `/api/products/{id}` | SELLER |
+| DELETE | `/api/products/{id}` | SELLER |
+| GET | `/api/products/my-products` | SELLER |
 
-### Test Protected Route
+### Cart
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/cart` | Authenticated |
+| POST | `/api/cart` | Authenticated |
+| PUT | `/api/cart/{id}` | Authenticated |
+| DELETE | `/api/cart/{id}` | Authenticated |
+| DELETE | `/api/cart` | Authenticated |
 
-GET `/api/test/hello`
+### Orders
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/api/orders` | Authenticated |
+| GET | `/api/orders` | Authenticated |
+| PUT | `/api/orders/{id}/cancel` | Authenticated |
 
-### Product (Requires SELLER role)
+### Wishlist & Reviews
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| POST | `/api/wishlist/{productId}` | Authenticated |
+| GET | `/api/wishlist` | Authenticated |
+| POST | `/api/reviews/{productId}` | Authenticated |
+| GET | `/api/reviews/{productId}` | Public |
 
-POST `/api/products`
+### Admin
+| Method | Endpoint | Access |
+|--------|----------|--------|
+| GET | `/api/admin/stats` | ADMIN |
+| GET | `/api/admin/orders` | ADMIN |
+| PUT | `/api/admin/orders/{id}/status` | ADMIN |
+| GET | `/api/admin/users` | ADMIN |
+| POST | `/api/admin/categories` | ADMIN |
+| DELETE | `/api/admin/categories/{id}` | ADMIN |
 
----
+## 👥 User Roles
 
-## 🧪 Example Request
+| Role | Capabilities |
+|------|-------------|
+| **BUYER** | Browse, cart, orders, wishlist, reviews |
+| **SELLER** | Add/edit/delete own products |
+| **ADMIN** | Manage categories, users, orders, view stats |
 
-Register:
+## 📊 Monitoring
 
-```
-POST /api/auth/register
-{
-  "name": "shaan",
-  "email": "shaan@gmail.com",
-  "password": "123456",
-  "role": "CUSTOMER"
-}
-```
+- **Prometheus**: `http://localhost:9090`
+- **Grafana**: `http://localhost:3001`
+- **Actuator**: `http://localhost:4000/actuator`
 
----
+## 📄 License
 
-## 🧠 What This Project Demonstrates
-
-* How JWT authentication actually works internally
-* How Spring Security filters requests
-* How stateless authentication replaces sessions
-* How real backend APIs protect endpoints
-
----
-
-## ▶ Run Locally
-
-1. Configure MySQL in `application.yml`
-2. Create database `ecommerce`
-3. Run:
-
-```
-mvn spring-boot:run
-```
-
-Server starts at:
-
-```
-http://localhost:8080
-```
-
----
-
-## 👨‍💻 Author
-
-Muhammed Shaan
-fix github workflow
-next in chatgpt
-add roles in database
+MIT
