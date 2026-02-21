@@ -23,3 +23,16 @@ spring:
 jwt:
   secret: mySecretKeyForJWTSigning_at_least_256bits_long_secure_key
   expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
