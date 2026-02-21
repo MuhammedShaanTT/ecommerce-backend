@@ -28,6 +28,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: 🔧 Ensure mvnw is executable
+        run: chmod +x mvnw
+
       - name: 📦 Build with Maven
         run: ./mvnw package -DskipTests -B
 
@@ -57,6 +60,9 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
           cache: 'maven'
+
+      - name: 🔧 Ensure mvnw is executable
+        run: chmod +x mvnw
 
       - name: 🔍 Compile & verify
         run: ./mvnw compile -B
