@@ -26,6 +26,8 @@ public class Product {
 
     private Integer stock;
 
+    private String imageUrl;
+
     private LocalDateTime createdAt;
 
     // seller who added the product

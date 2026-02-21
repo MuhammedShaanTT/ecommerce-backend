@@ -2,6 +2,7 @@ package com.ecommerce.service;
 
 import com.ecommerce.entity.User;
 import com.ecommerce.repository.UserRepository;
+import com.ecommerce.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -16,12 +17,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .roles(user.getRole().getName())
-                .build();
+        // Use CustomUserDetails so authority format is consistent (no ROLE_ prefix
+        // added automatically)
+        return new CustomUserDetails(user);
     }
 }

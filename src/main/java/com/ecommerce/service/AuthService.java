@@ -5,6 +5,8 @@ import com.ecommerce.dto.auth.LoginRequest;
 import com.ecommerce.dto.auth.RegisterRequest;
 import com.ecommerce.entity.Role;
 import com.ecommerce.entity.User;
+import com.ecommerce.exception.DuplicateResourceException;
+import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.repository.RoleRepository;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.util.JwtUtil;
@@ -19,48 +21,49 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService userDetailsService;
+        private final UserRepository userRepository;
+        private final RoleRepository roleRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final JwtUtil jwtUtil;
+        private final AuthenticationManager authenticationManager;
+        private final CustomUserDetailsService userDetailsService;
 
-    // ================= REGISTER =================
-    public AuthResponse register(RegisterRequest request) {
+        public AuthResponse register(RegisterRequest request) {
 
-        Role role = roleRepository.findByName(request.getRole())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                // Duplicate email check
+                if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+                        throw new DuplicateResourceException("Email already registered: " + request.getEmail());
+                }
 
-        User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .build();
+                Role role = roleRepository.findByName(request.getRole())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Role not found: " + request.getRole()));
 
-        userRepository.save(user);
+                User user = User.builder()
+                                .name(request.getName())
+                                .email(request.getEmail())
+                                .password(passwordEncoder.encode(request.getPassword()))
+                                .role(role)
+                                .build();
 
-        // load user from DB → create JWT
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
-        String token = jwtUtil.generateToken(userDetails);
+                userRepository.save(user);
 
-        return new AuthResponse(token);
-    }
+                UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
+                String token = jwtUtil.generateToken(userDetails);
 
-    // ================= LOGIN =================
-    public AuthResponse login(LoginRequest request) {
+                return new AuthResponse(token);
+        }
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        public AuthResponse login(LoginRequest request) {
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
-        String token = jwtUtil.generateToken(userDetails);
+                authenticationManager.authenticate(
+                                new UsernamePasswordAuthenticationToken(
+                                                request.getEmail(),
+                                                request.getPassword()));
 
-        return new AuthResponse(token);
-    }
+                UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+                String token = jwtUtil.generateToken(userDetails);
+
+                return new AuthResponse(token);
+        }
 }
