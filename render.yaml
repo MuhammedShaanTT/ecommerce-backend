@@ -1,0 +1,47 @@
+# Render.com Blueprint — ShopVerse Backend + Database
+# Docs: https://docs.render.com/infrastructure-as-code
+# Usage: Push to GitHub → Render Dashboard → New → Blueprint → Select repo
+#
+# NOTE: Deploy the frontend separately as a Render Static Site
+#       (see deployment walkthrough for instructions)
+
+databases:
+  - name: shopverse-db
+    plan: free
+    databaseName: shopverse
+    user: shopverse_user
+
+services:
+  # ========== BACKEND ==========
+  - type: web
+    name: shopverse-api
+    runtime: docker
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: DB_HOST
+        fromDatabase:
+          name: shopverse-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: shopverse-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: shopverse-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: shopverse-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: shopverse-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://shopverse-ui.onrender.com  # ← UPDATE with your actual frontend URL
+    healthCheckPath: /actuator/health

@@ -23,6 +23,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Arrays;
+
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
@@ -33,6 +36,9 @@ public class SecurityConfig {
         private final CustomAccessDeniedHandler accessDeniedHandler;
         private final CustomUserDetailsService userDetailsService;
         private final PasswordEncoder passwordEncoder;
+
+        @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:5173,http://localhost,http://localhost:80}")
+        private String allowedOrigins;
 
         @Bean
         public DaoAuthenticationProvider authenticationProvider() {
@@ -104,7 +110,8 @@ public class SecurityConfig {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+                List<String> origins = Arrays.asList(allowedOrigins.split(","));
+                config.setAllowedOrigins(origins);
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setAllowCredentials(true);
