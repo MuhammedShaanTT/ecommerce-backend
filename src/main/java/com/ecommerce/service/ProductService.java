@@ -128,6 +128,7 @@ public class ProductService {
                                 .price(product.getPrice())
                                 .stock(product.getStock())
                                 .imageUrl(product.getImageUrl())
+                                .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
                                 .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
                                 .sellerName(product.getSeller() != null ? product.getSeller().getName() : null)
                                 .createdAt(product.getCreatedAt())
