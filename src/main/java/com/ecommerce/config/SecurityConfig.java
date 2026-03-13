@@ -99,6 +99,10 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.DELETE, "/api/products/**")
                                                 .hasAuthority("SELLER")
 
+                                                // Allow CORS preflight requests
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**")
+                                                .permitAll()
+
                                                 // Everything else requires authentication
                                                 .anyRequest().authenticated())
 
@@ -112,8 +116,9 @@ public class SecurityConfig {
                 CorsConfiguration config = new CorsConfiguration();
                 List<String> origins = Arrays.asList(allowedOrigins.split(","));
                 config.setAllowedOrigins(origins);
-                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
+                config.setExposedHeaders(List.of("Authorization"));
                 config.setAllowCredentials(true);
                 return new UrlBasedCorsConfigurationSource() {
                         {
