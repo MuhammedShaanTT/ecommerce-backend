@@ -34,7 +34,7 @@ spring:
             required: true
 
 jwt:
-  secret: mySecretKeyForJWTSigning_at_least_256bits_long_secure_key
+  password: ${EMAIL_APP_PASSWORD:your_app_password_here}
   expiration: 86400000
 
 tiswa:
