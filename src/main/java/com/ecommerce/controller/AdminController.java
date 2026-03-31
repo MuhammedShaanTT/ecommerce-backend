@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ecommerce.repository.RoleRepository;
+import com.ecommerce.entity.Role;
+
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -35,6 +38,7 @@ public class AdminController {
     private final ProductService productService;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final RoleRepository roleRepository;
 
     // === STATS ===
     @GetMapping("/stats")
@@ -88,13 +92,69 @@ public class AdminController {
                 "id", u.getId(),
                 "name", u.getName(),
                 "email", u.getEmail(),
-                "role", u.getRole().getName())).collect(Collectors.toList());
+                "role", u.getRole().getName(),
+                "enabled", u.isEnabled(),
+                "verified", u.isVerified())).collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+    
+    @PutMapping("/users/{id}/role")
+    public ResponseEntity<Map<String, Object>> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new com.ecommerce.exception.ResourceNotFoundException("User not found"));
+        
+        String newRoleName = body.get("role");
+        Role role = roleRepository.findByName(newRoleName)
+            .orElseThrow(() -> new com.ecommerce.exception.ResourceNotFoundException("Role not found"));
+            
+        user.setRole(role);
+        userRepository.save(user);
+        
+        return ResponseEntity.ok(Map.of("message", "User role updated successfully", "role", role.getName()));
+    }
+    
+    @PutMapping("/users/{id}/toggle-status")
+    public ResponseEntity<Map<String, Object>> toggleUserStatus(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new com.ecommerce.exception.ResourceNotFoundException("User not found"));
+        user.setEnabled(!user.isEnabled());
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "User status updated", "enabled", user.isEnabled()));
+    }
+    
+    @PutMapping("/users/{id}/verify")
+    public ResponseEntity<Map<String, Object>> verifyUser(@PathVariable Long id) {
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new com.ecommerce.exception.ResourceNotFoundException("User not found"));
+        user.setVerified(true);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of("message", "User verified successfully"));
+    }
+    
+    @DeleteMapping("/products/{id}")
+    public ResponseEntity<Map<String, Object>> deleteProductAny(@PathVariable Long id) {
+        productService.deleteProduct(id);
+        return ResponseEntity.ok(Map.of("message", "Product deleted by admin"));
+    }
+    
+    @GetMapping("/reports")
+    public ResponseEntity<Map<String, Object>> getAdminReports() {
+        // Mock revenue by day data (in production, this would query GroupBy DAY)
+        List<Map<String, Object>> revenueData = List.of(
+            Map.of("name", "Mon", "revenue", 5000),
+            Map.of("name", "Tue", "revenue", 8000),
+            Map.of("name", "Wed", "revenue", 12000),
+            Map.of("name", "Thu", "revenue", 7000),
+            Map.of("name", "Fri", "revenue", 15000),
+            Map.of("name", "Sat", "revenue", 22000),
+            Map.of("name", "Sun", "revenue", 18000)
+        );
+        return ResponseEntity.ok(Map.of("revenueData", revenueData));
     }
 
     // === PRODUCTS ===
     @GetMapping("/products")
     public ResponseEntity<?> getAllProducts(@PageableDefault(size = 50) Pageable pageable) {
-        return ResponseEntity.ok(productService.getAllProducts(pageable));
+        return ResponseEntity.ok(productService.getAllProducts(null, null, pageable));
     }
 }

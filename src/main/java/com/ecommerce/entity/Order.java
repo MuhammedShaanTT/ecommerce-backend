@@ -32,5 +32,11 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    private String shippingAddress;
+
+    private java.time.LocalDate estimatedDelivery;
+
+    private String buyerEmail;
+
     private LocalDateTime createdAt;
 }

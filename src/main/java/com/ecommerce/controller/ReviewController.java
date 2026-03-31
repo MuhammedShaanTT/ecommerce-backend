@@ -27,4 +27,12 @@ public class ReviewController {
     public ResponseEntity<Map<String, Object>> getProductReviews(@PathVariable Long productId) {
         return ResponseEntity.ok(reviewService.getProductReviews(productId));
     }
+
+    @PutMapping("/{reviewId}/reply")
+    public ResponseEntity<Map<String, Object>> replyToReview(
+            @PathVariable Long reviewId,
+            @RequestBody Map<String, String> body) {
+        String reply = body.get("reply");
+        return ResponseEntity.ok(reviewService.replyToReview(reviewId, reply));
+    }
 }

@@ -1,5 +1,6 @@
 package com.ecommerce.service;
 
+import com.ecommerce.entity.Product;
 import com.ecommerce.entity.Review;
 import com.ecommerce.entity.User;
 import com.ecommerce.exception.DuplicateResourceException;
@@ -45,6 +46,22 @@ public class ReviewService {
         return Map.of("message", "Review added!", "rating", rating);
     }
 
+    public Map<String, Object> replyToReview(Long reviewId, String reply) {
+        User seller = getLoggedInUser();
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
+        
+        if (!review.getProduct().getSeller().getId().equals(seller.getId())) {
+             throw new RuntimeException("Unauthorized to reply to this review");
+        }
+        
+        review.setSellerReply(reply);
+        review.setSellerReplyAt(LocalDateTime.now());
+        reviewRepository.save(review);
+        
+        return Map.of("message", "Reply added successfully");
+    }
+
     public Map<String, Object> getProductReviews(Long productId) {
         List<Map<String, Object>> reviews = reviewRepository.findByProductIdOrderByCreatedAtDesc(productId)
                 .stream().map(r -> Map.<String, Object>of(
@@ -52,6 +69,8 @@ public class ReviewService {
                         "userName", r.getUser().getName(),
                         "rating", r.getRating(),
                         "comment", r.getComment() != null ? r.getComment() : "",
+                        "sellerReply", r.getSellerReply() != null ? r.getSellerReply() : "",
+                        "sellerReplyAt", r.getSellerReplyAt() != null ? r.getSellerReplyAt().toString() : "",
                         "createdAt", r.getCreatedAt().toString()))
                 .collect(Collectors.toList());
 

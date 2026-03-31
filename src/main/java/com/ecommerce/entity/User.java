@@ -23,7 +23,15 @@ public class User {
 
     private String password;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
+    
+    @Column(columnDefinition = "boolean default true")
+    @Builder.Default
+    private boolean enabled = true;
+    
+    @Column(columnDefinition = "boolean default false")
+    @Builder.Default
+    private boolean verified = false;
 }

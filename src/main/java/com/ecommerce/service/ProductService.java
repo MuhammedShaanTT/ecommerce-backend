@@ -85,8 +85,11 @@ public class ProductService {
                 productRepository.delete(product);
         }
 
-        // GET ALL PRODUCTS (paginated)
-        public Page<ProductResponse> getAllProducts(Pageable pageable) {
+        // GET ALL PRODUCTS (paginated & filtered)
+        public Page<ProductResponse> getAllProducts(java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice, Pageable pageable) {
+                if (minPrice != null && maxPrice != null) {
+                        return productRepository.findByPriceBetween(minPrice, maxPrice, pageable).map(this::mapToResponse);
+                }
                 return productRepository.findAll(pageable).map(this::mapToResponse);
         }
 
@@ -97,8 +100,11 @@ public class ProductService {
                 return mapToResponse(product);
         }
 
-        // GET PRODUCTS BY CATEGORY (paginated)
-        public Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable) {
+        // GET PRODUCTS BY CATEGORY (paginated & filtered)
+        public Page<ProductResponse> getProductsByCategory(Long categoryId, java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice, Pageable pageable) {
+                if (minPrice != null && maxPrice != null) {
+                        return productRepository.findByCategoryIdAndPriceBetween(categoryId, minPrice, maxPrice, pageable).map(this::mapToResponse);
+                }
                 return productRepository.findByCategoryId(categoryId, pageable).map(this::mapToResponse);
         }
 
@@ -108,8 +114,11 @@ public class ProductService {
                 return productRepository.findBySeller(seller, pageable).map(this::mapToResponse);
         }
 
-        // SEARCH PRODUCTS (paginated)
-        public Page<ProductResponse> searchProducts(String query, Pageable pageable) {
+        // SEARCH PRODUCTS (paginated & filtered)
+        public Page<ProductResponse> searchProducts(String query, java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice, Pageable pageable) {
+                if (minPrice != null && maxPrice != null) {
+                        return productRepository.findByNameContainingIgnoreCaseAndPriceBetween(query, minPrice, maxPrice, pageable).map(this::mapToResponse);
+                }
                 return productRepository.findByNameContainingIgnoreCase(query, pageable).map(this::mapToResponse);
         }
 

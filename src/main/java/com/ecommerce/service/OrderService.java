@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,9 +26,11 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
+    private final AddressRepository addressRepository;
 
     @Transactional
-    public OrderResponse placeOrder() {
+    public OrderResponse placeOrder(Long addressId) {
         User buyer = getLoggedInUser();
 
         List<CartItem> cartItems = cartItemRepository.findByUser(buyer);
@@ -43,6 +46,21 @@ public class OrderService {
                 .status(OrderStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .build();
+                
+        // Set Address
+        if (addressId != null) {
+            Address addr = addressRepository.findById(addressId).orElse(null);
+            if (addr != null && addr.getUser().getId().equals(buyer.getId())) {
+                order.setShippingAddress(addr.getFullName() + ", " + addr.getStreet() + ", " + addr.getCity() + ", " + addr.getState() + " - " + addr.getPincode() + " (" + addr.getPhone() + ")");
+            }
+        } else {
+            // Find default
+            List<Address> addresses = addressRepository.findByUser(buyer);
+            Address def = addresses.stream().filter(Address::isDefault).findFirst().orElse(addresses.isEmpty() ? null : addresses.get(0));
+            if (def != null) {
+                order.setShippingAddress(def.getFullName() + ", " + def.getStreet() + ", " + def.getCity() + ", " + def.getState() + " - " + def.getPincode() + " (" + def.getPhone() + ")");
+            }
+        }
 
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
@@ -69,9 +87,27 @@ public class OrderService {
 
         order.setTotalAmount(total);
         order.setItems(orderItems);
+        // Set default estimated delivery (e.g. 5 days from now)
+        order.setEstimatedDelivery(java.time.LocalDate.now().plusDays(5));
         order = orderRepository.save(order);
 
         cartItemRepository.deleteByUser(buyer);
+
+        // --- EMAIL NOTIFICATIONS ---
+        // 1. Notify Buyer
+        emailService.sendOrderConfirmation(buyer, order);
+
+        // 2. Notify Sellers
+        Map<User, List<OrderItem>> sellerItemsMap = orderItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getProduct().getSeller()));
+        
+        for (Map.Entry<User, List<OrderItem>> entry : sellerItemsMap.entrySet()) {
+            emailService.sendNewOrderNotification(entry.getKey(), order, entry.getValue());
+        }
+
+        // 3. Notify Admin
+        emailService.sendAdminNotification("New Order Placed", 
+            "Order #" + order.getId() + " placed by " + buyer.getName() + " for ₹" + order.getTotalAmount());
 
         return mapToResponse(order);
     }
@@ -113,6 +149,11 @@ public class OrderService {
 
         order.setStatus(OrderStatus.CANCELLED);
         order = orderRepository.save(order);
+
+        // Send email to buyer
+        emailService.sendOrderCancellation(user, order);
+        emailService.sendAdminNotification("Order Cancelled", "Order #" + order.getId() + " was cancelled by user.");
+
         return mapToResponse(order);
     }
 
@@ -128,8 +169,12 @@ public class OrderService {
     public OrderResponse updateOrderStatus(Long id, String status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+        String oldStatus = order.getStatus().name();
         order.setStatus(OrderStatus.valueOf(status));
         order = orderRepository.save(order);
+
+        emailService.sendOrderStatusUpdate(order.getBuyer(), order, oldStatus, status);
+
         return mapToResponse(order);
     }
 

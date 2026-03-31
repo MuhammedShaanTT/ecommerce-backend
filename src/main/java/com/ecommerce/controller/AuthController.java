@@ -5,8 +5,12 @@ import com.ecommerce.entity.User;
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.service.AuthService;
+import com.ecommerce.service.EmailService;
+import com.ecommerce.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,12 +24,25 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final EmailService emailService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
-        return authService.register(request);
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthResponse response = authService.register(request);
+        
+        // Find user to send welcome email
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (user != null) {
+            emailService.sendWelcomeEmail(user);
+            emailService.sendAdminNotification("New User Registration", 
+                "A new user has registered: " + user.getName() + " (" + user.getEmail() + ") with role " + user.getRole().getName());
+        }
+        
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")

@@ -37,8 +37,11 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> getAllProducts(@PageableDefault(size = 12) Pageable pageable) {
-        return ResponseEntity.ok(productService.getAllProducts(pageable));
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice,
+            @PageableDefault(size = 12) Pageable pageable) {
+        return ResponseEntity.ok(productService.getAllProducts(minPrice, maxPrice, pageable));
     }
 
     @GetMapping("/{id}")
@@ -47,9 +50,12 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
-    public ResponseEntity<Page<ProductResponse>> getByCategory(@PathVariable Long categoryId,
+    public ResponseEntity<Page<ProductResponse>> getByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice,
             @PageableDefault(size = 12) Pageable pageable) {
-        return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
+        return ResponseEntity.ok(productService.getProductsByCategory(categoryId, minPrice, maxPrice, pageable));
     }
 
     @GetMapping("/my-products")
@@ -58,8 +64,11 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<ProductResponse>> searchProducts(@RequestParam String query,
+    public ResponseEntity<Page<ProductResponse>> searchProducts(
+            @RequestParam String query,
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice,
             @PageableDefault(size = 12) Pageable pageable) {
-        return ResponseEntity.ok(productService.searchProducts(query, pageable));
+        return ResponseEntity.ok(productService.searchProducts(query, minPrice, maxPrice, pageable));
     }
 }

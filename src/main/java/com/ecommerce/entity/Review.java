@@ -32,4 +32,8 @@ public class Review {
     private String comment;
 
     private LocalDateTime createdAt;
+
+    private String sellerReply;
+
+    private LocalDateTime sellerReplyAt;
 }
