@@ -34,12 +34,16 @@ public class AuthController {
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         
-        // Find user to send welcome email
-        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
-        if (user != null) {
-            emailService.sendWelcomeEmail(user);
-            emailService.sendAdminNotification("New User Registration", 
-                "A new user has registered: " + user.getName() + " (" + user.getEmail() + ") with role " + user.getRole().getName());
+        // Find user to send welcome email (non-blocking — failure won't affect registration)
+        try {
+            User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+            if (user != null) {
+                emailService.sendWelcomeEmail(user);
+                emailService.sendAdminNotification("New User Registration", 
+                    "A new user has registered: " + user.getName() + " (" + user.getEmail() + ") with role " + user.getRole().getName());
+            }
+        } catch (Exception e) {
+            // Email failure should never prevent registration
         }
         
         return ResponseEntity.ok(response);

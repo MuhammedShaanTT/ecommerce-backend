@@ -28,9 +28,9 @@ COPY --from=build /app/target/*.jar app.jar
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
-ENV PORT=4000
-ENV SPRING_PROFILES_ACTIVE=prod
+ENV PORT=10000
+ENV SPRING_PROFILES_ACTIVE=render
 
-EXPOSE 4000
+EXPOSE ${PORT}
 
 ENTRYPOINT ["sh", "-c", "java -jar app.jar --spring.profiles.active=${SPRING_PROFILES_ACTIVE} --server.port=${PORT}"]
